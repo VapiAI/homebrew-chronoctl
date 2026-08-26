@@ -30,9 +30,10 @@ revision reported by Chronosphere's v1.33.0 binary.
 2. **Trust.** Homebrew 6 requires trust for non-official taps. Installing the fully
    qualified formula directly grants item-level trust; users should avoid trusting
    an entire tap unless they accept all current and future code in it.
-3. **Maintenance lag.** Chronosphere publishes new tags but does not currently
-   publish a release asset/checksum manifest on each GitHub release. A maintainer
-   must detect each tag, update the archive checksum and revision, and test it.
+3. **Maintenance lag.** Chronosphere publishes new stable tags but does not
+   currently publish a release asset/checksum manifest for current versions. A
+   daily workflow detects new tags and opens a tested formula update pull request,
+   but a maintainer still has to review and merge it before `brew update` can see it.
 4. **Build cost.** Source installation downloads Go modules and compiles a large Go
    dependency graph. Without bottles, installs are slower than Chronosphere's direct
    binary download and require the Homebrew Go build dependency.
@@ -54,6 +55,10 @@ revision reported by Chronosphere's v1.33.0 binary.
    Chronosphere concerning trademarks or distribution.
 9. **Credentials.** Installation needs no Chronosphere token. Runtime use does; API
    tokens must stay outside Homebrew metadata, logs, tests, and this repository.
+10. **Historical versions.** The tap retains four rollback versions in addition to
+    the default formula. They are keg-only to prevent binary-name collisions and
+    are frozen at exact tags, so they do not receive fixes unless upstream publishes
+    and the tap deliberately adopts a replacement version.
 
 ## Prior art
 

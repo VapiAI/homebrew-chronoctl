@@ -26,5 +26,6 @@ class Chronoctl < Formula
 
   test do
     assert_match "Version: v#{version}", shell_output("#{bin}/chronoctl version")
+    assert_match "kind: Monitor", shell_output("#{bin}/chronoctl monitors scaffold")
   end
 end

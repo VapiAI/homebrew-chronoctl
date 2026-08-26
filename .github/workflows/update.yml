@@ -1,0 +1,80 @@
+name: Update Chronoctl
+
+on:
+  schedule:
+    - cron: "17 14 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable upstream version, without or without the leading v
+        required: false
+        type: string
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@fd832223f9f99ebf0244dd20658680e5d4aca049 # 2026.08.03.2
+        with:
+          core: true
+          cask: false
+
+      - name: Update formulae
+        id: update
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -n "$REQUESTED_VERSION" ]]; then
+            ruby script/update.rb "$REQUESTED_VERSION"
+          else
+            ruby script/update.rb
+          fi
+
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            version="$(sed -nE 's|.*refs/tags/v([0-9.]+)\.tar\.gz.*|\1|p' Formula/chronoctl.rb)"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check style
+        if: steps.update.outputs.changed == 'true'
+        run: brew style --formula vapiai/chronoctl/chronoctl
+
+      - name: Audit formula
+        if: steps.update.outputs.changed == 'true'
+        run: brew audit --strict --new --online vapiai/chronoctl/chronoctl
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+
+      - name: Open update pull request
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          branch="automation/chronoctl-$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add Formula
+          git commit -m "chronoctl $VERSION"
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chronoctl $VERSION" \
+            --body "Updates the default formula to Chronoctl v$VERSION and retains the previous release as a versioned formula."
+          gh workflow run test.yml --ref "$branch"
