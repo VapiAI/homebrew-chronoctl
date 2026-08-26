@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@fd832223f9f99ebf0244dd20658680e5d4aca049 # 2026.08.03.2
+        with:
+          core: true
+          cask: false
+
+      - name: Check style
+        run: brew style --formula chronoctl
+
+      - name: Audit formula
+        run: brew audit --strict --new --online chronoctl
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+
+      - name: Build and install
+        run: brew install --build-from-source chronoctl
+
+      - name: Test
+        run: brew test chronoctl
