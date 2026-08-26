@@ -8,7 +8,7 @@ The formula builds the tagged Apache-2.0 source published in
 ## Install
 
 ```sh
-brew install chris-garber-vapi/chronoctl/chronoctl
+brew install VapiAI/chronoctl/chronoctl
 ```
 
 Homebrew automatically taps a fully qualified formula. With Homebrew 6 or newer,
@@ -31,7 +31,7 @@ Chronosphere currently supports Chronoctl versions for one year after release. T
 check whether the formula is behind the newest upstream tag:
 
 ```sh
-brew livecheck --formula chris-garber-vapi/chronoctl/chronoctl
+brew livecheck --formula VapiAI/chronoctl/chronoctl
 ```
 
 To update it, change the tag in `url`, the source archive `sha256`, and the
@@ -40,12 +40,12 @@ seven-character source revision passed in `ldflags`. Then run the checks below.
 ## Development
 
 ```sh
-brew tap chris-garber-vapi/chronoctl "$(pwd)"
-brew trust --formula chris-garber-vapi/chronoctl/chronoctl
-brew style --formula chris-garber-vapi/chronoctl/chronoctl
-brew audit --strict --new --online chris-garber-vapi/chronoctl/chronoctl
-brew install --build-from-source chris-garber-vapi/chronoctl/chronoctl
-brew test chris-garber-vapi/chronoctl/chronoctl
+brew tap VapiAI/chronoctl "$(pwd)"
+brew trust --formula VapiAI/chronoctl/chronoctl
+brew style --formula VapiAI/chronoctl/chronoctl
+brew audit --strict --new --online VapiAI/chronoctl/chronoctl
+brew install --build-from-source VapiAI/chronoctl/chronoctl
+brew test VapiAI/chronoctl/chronoctl
 ```
 
 The CI workflow runs style, audit, build, and test on macOS and Linux. The formula
