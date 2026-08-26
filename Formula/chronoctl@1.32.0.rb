@@ -16,7 +16,7 @@ class ChronoctlAT1320 < Formula
       -X #{build_package}.Version=v#{version}
     ]
 
-    system "go", "build", *std_go_args(ldflags:), "./src/cmd/chronoctl"
+    system "go", "build", *std_go_args(ldflags:, output: bin/"chronoctl"), "./src/cmd/chronoctl"
     generate_completions_from_executable(bin/"chronoctl", "completion")
   end
 
