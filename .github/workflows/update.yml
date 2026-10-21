@@ -6,31 +6,31 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Stable upstream version, without or without the leading v
+        description: Stable upstream version, with or without the leading v
         required: false
         type: string
 
+concurrency:
+  group: update-chronoctl
+  cancel-in-progress: false
+
 permissions:
-  actions: write
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  update:
+  prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+      branch: ${{ steps.update.outputs.branch }}
+      sha: ${{ steps.update.outputs.sha }}
     steps:
       - name: Check out tap
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
 
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@fd832223f9f99ebf0244dd20658680e5d4aca049 # 2026.08.03.2
-        with:
-          core: true
-          cask: false
-
-      - name: Update formulae
+      - name: Prepare update
         id: update
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
@@ -41,40 +41,49 @@ jobs:
             ruby script/update.rb
           fi
 
-          if git diff --quiet; then
+          git add Formula
+          if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            version="$(sed -nE 's|.*refs/tags/v([0-9.]+)\.tar\.gz.*|\1|p' Formula/chronoctl.rb)"
-            echo "version=$version" >> "$GITHUB_OUTPUT"
+            echo "Chronoctl is already current." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
 
-      - name: Check style
-        if: steps.update.outputs.changed == 'true'
-        run: brew style --formula vapiai/chronoctl/chronoctl
-
-      - name: Audit formula
-        if: steps.update.outputs.changed == 'true'
-        run: brew audit --strict --new --online vapiai/chronoctl/chronoctl
-        env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
-
-      - name: Open update pull request
-        if: steps.update.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.update.outputs.version }}
-        run: |
-          branch="automation/chronoctl-$VERSION"
+          version="$(sed -nE 's|.*refs/tags/v([0-9.]+)\.tar\.gz.*|\1|p' Formula/chronoctl.rb)"
+          branch="automation/chronoctl-$version-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git add Formula
-          git commit -m "chronoctl $VERSION"
-          git push --set-upstream origin "$branch"
-          gh pr create \
-            --base main \
-            --head "$branch" \
-            --title "chronoctl $VERSION" \
-            --body "Updates the default formula to Chronoctl v$VERSION and retains the previous release as a versioned formula."
-          gh workflow run test.yml --ref "$branch"
+          git commit -m "chronoctl $version"
+          git push origin "$branch"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  validate:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ needs.prepare.outputs.sha }}
+
+  publish:
+    needs: [prepare, validate]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out validated commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Publish latest formula
+        env:
+          CANDIDATE_BRANCH: ${{ needs.prepare.outputs.branch }}
+        run: |
+          # A normal push rejects concurrent main changes; never overwrite them.
+          git push origin HEAD:refs/heads/main
+          git push origin --delete "$CANDIDATE_BRANCH"
+          echo "Published validated Chronoctl update to main." >> "$GITHUB_STEP_SUMMARY"

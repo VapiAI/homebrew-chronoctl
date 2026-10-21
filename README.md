@@ -58,10 +58,19 @@ check whether the formula is behind the newest upstream tag:
 brew livecheck --formula VapiAI/chronoctl/chronoctl
 ```
 
-The scheduled `Update Chronoctl` workflow checks the upstream repository daily.
-When a newer stable `vX.Y.Z` tag appears, it opens a pull request that updates
-`chronoctl`, preserves the displaced release as a versioned formula, and removes
-the oldest rollback formula once the four-version retention window is full.
+The scheduled `Update Chronoctl` workflow checks the upstream repository daily
+at 14:17 UTC. When a newer stable `vX.Y.Z` tag appears, it prepares an update on
+a temporary branch, then runs the tap's style, audit, build, and CLI tests on
+macOS and Linux, including the rollback formula tests. Only after all checks
+pass does it automatically publish that exact commit to `main`, making the new
+version the default for `brew install` and `brew upgrade`. Pre-release tags are
+ignored. No extra token or manual PR merge is required.
+
+Failed checks leave the current default unchanged and the candidate branch
+available for inspection. If `main` changes during validation, publication fails
+instead of overwriting those changes; the next daily run prepares a fresh update.
+You can also run `Update Chronoctl` manually from GitHub Actions. Runs on branches
+other than `main` validate updates but cannot publish them.
 
 To prepare an update locally or select an explicit newer tag:
 
