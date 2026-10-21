@@ -31,7 +31,7 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@fd832223f9f99ebf0244dd20658680e5d4aca049 # 2026.08.03.2
+        uses: Homebrew/actions/setup-homebrew@4790763c0a3ba4036f72634dc079c4a7dfcd4878 # 2026.10.19.1
         with:
           core: true
           cask: false
@@ -76,7 +76,7 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@fd832223f9f99ebf0244dd20658680e5d4aca049 # 2026.08.03.2
+        uses: Homebrew/actions/setup-homebrew@4790763c0a3ba4036f72634dc079c4a7dfcd4878 # 2026.10.19.1
         with:
           core: true
           cask: false
