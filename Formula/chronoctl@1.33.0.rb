@@ -1,18 +1,17 @@
-class ChronoctlAT1310 < Formula
+class ChronoctlAT1330 < Formula
   desc "Manage Chronosphere Observability Platform resources"
   homepage "https://docs.chronosphere.io/tooling/chronoctl"
-  url "https://github.com/chronosphereio/chronoctl-core/archive/refs/tags/v1.31.0.tar.gz"
-  sha256 "f5778f21171286e44f3919b66a79d1525338743c06223473278afa372b0d9bc4"
+  url "https://github.com/chronosphereio/chronoctl-core/archive/refs/tags/v1.33.0.tar.gz"
+  sha256 "e41ae46da2d6ddba9da7552a1ab169f9d9962be5487d91bef7ffdd24509775d0"
   license "Apache-2.0"
 
   keg_only :versioned_formula
-
   depends_on "go" => :build
 
   def install
     build_package = "github.com/chronosphereio/chronoctl-core/src/cmd/pkg/buildinfo"
     ldflags = %W[
-      -X #{build_package}.SHA=653f82e
+      -X #{build_package}.SHA=620f8f0
       -X #{build_package}.Version=v#{version}
     ]
 

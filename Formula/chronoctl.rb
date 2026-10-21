@@ -1,8 +1,8 @@
 class Chronoctl < Formula
   desc "Manage Chronosphere Observability Platform resources"
   homepage "https://docs.chronosphere.io/tooling/chronoctl"
-  url "https://github.com/chronosphereio/chronoctl-core/archive/refs/tags/v1.33.0.tar.gz"
-  sha256 "e41ae46da2d6ddba9da7552a1ab169f9d9962be5487d91bef7ffdd24509775d0"
+  url "https://github.com/chronosphereio/chronoctl-core/archive/refs/tags/v1.36.0.tar.gz"
+  sha256 "e79783ec78195f3af1396d18a7066ce95675deaa3a6dc40c44c4235e04bd8d1f"
   license "Apache-2.0"
   head "https://github.com/chronosphereio/chronoctl-core.git", branch: "main"
 
@@ -16,7 +16,7 @@ class Chronoctl < Formula
   def install
     build_package = "github.com/chronosphereio/chronoctl-core/src/cmd/pkg/buildinfo"
     ldflags = %W[
-      -X #{build_package}.SHA=620f8f0
+      -X #{build_package}.SHA=fd026d3
       -X #{build_package}.Version=v#{version}
     ]
 
